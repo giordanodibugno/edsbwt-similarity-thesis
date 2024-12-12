@@ -56,7 +56,7 @@ int da_to_everything(string filename, dataTypeNChar BWT_length){
 	
 
 	//apri il document array per leggerlo
-	string da_s = filename + ".fasta.4.da";
+	string da_s = filename + ".4.da";
 	FILE* da = fopen(da_s.c_str(),"rb");
 	if (da == NULL) {
 		std::cerr << "Error opening \"" << da_s.c_str() << "\" file"<< std::endl;
@@ -201,14 +201,7 @@ int da_to_everything(string filename, dataTypeNChar BWT_length){
 		}
 	# endif
 
-	//Remove the auxiliary file .fasta
-	string fastaFileName = filename + ".fasta";
-    status = remove(fastaFileName);
-    if (status != 0) {
-        cerr << "Error deleting file" << fastaFileName << endl;
-    }
-
-	//Remove the auxiliary file .fasta.4.da
+	//Remove the auxiliary file .4.da
     status = remove(da_s);
     if (status != 0) {
         cerr << "Error deleting file" << da_s << endl;
@@ -325,7 +318,7 @@ int remove_empty_symbols(string fileName){
 	dataTypeNChar toKeep = bwt_length - empty_number;
 
 
-    string bwtFileName = string(fileName) + ".fasta.bwt";
+    string bwtFileName = string(fileName) + ".bwt";
     FILE *bwtFile = fopen(bwtFileName.c_str(), "r");
 	if (bwtFile == NULL) {
 		std::cerr << "Error opening \"" << bwtFileName << "\" file"<< std::endl;
@@ -380,7 +373,7 @@ int remove_empty_symbols(string fileName){
         cerr << "Error deleting file" << emptyName << endl;
     }
 
-	//Remove the auxiliary file .fasta.bwt
+	//Remove the auxiliary file .bwt
     status = remove(bwtFileName);
     if (status != 0) {
         cerr << "Error deleting file" << bwtFileName << endl;
