@@ -11,6 +11,7 @@ int main (int argc, char *argv[]){
 	if(argc != 3 ) {
 		std::cerr << "usage: " << argv[0] << " input output" << std::endl;
 		std::cerr << "input is the full filename, while output is the filename without any extension.\n";
+		exit(1);
 	}
 
 	char current;
