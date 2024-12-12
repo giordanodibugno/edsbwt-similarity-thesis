@@ -10,10 +10,8 @@ DEFINES = -DRECOVERBW=$(RECOVERBW) -DFASTQ=$(FASTQ) -DOMP=$(OMP)
 #OMP_LIB = -fopenmp
 
 #SDSL
-SDSL_INC = /datiBio/SDSL/include
-SDSL_LIB = /datiBio/SDSL/lib
-#SDSL_INC = $(HOME)/local/include
-#SDSL_LIB = $(HOME)/local/lib
+SDSL_INC = $(HOME)/local/include
+SDSL_LIB = $(HOME)/local/lib
 
 CPPFLAGS = -Wall -ansi -pedantic -g -O3 -std=c++11 $(DEFINES) 
 #$(OMP_LIB)
