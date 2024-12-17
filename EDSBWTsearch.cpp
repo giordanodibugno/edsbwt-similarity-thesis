@@ -406,8 +406,8 @@ int EDSBWT::findMultipleDollarsBackward(std::vector<rangeElementBW> &vectRange, 
 							#endif
 				assert (toRead <= numberRead);
 				
-				numBlockCounterStart=toRead;
-				contInCurrentBlockStart = numBlock;		
+				numBlockCounterStart = numBlock;
+				contInCurrentBlockStart = toRead;
 				#if DEBUG == 1				
 					std::cerr << "\t UPDATE: numBlockCounterStart " << numBlockCounterStart << " contInCurrentBlockStart " << contInCurrentBlockStart << "\n";
 					std::cerr << "countersStart:\t";
@@ -418,12 +418,13 @@ int EDSBWT::findMultipleDollarsBackward(std::vector<rangeElementBW> &vectRange, 
 				
 				//END
 				toRead = vectRange[k].endPosN;
-				if ( (dataTypeNChar)floor((long double)((toRead-1)/DIMBLOCK)) == numBlockCounterStart) {
-					for (dataTypedimAlpha i = 0 ; i < sizeAlpha; i++) {
-						countersEnd[i] += countersStart[i];  //+1???
-					}
-					contInCurrentBlockEnd = contInCurrentBlockStart;
-				}
+				//Commented since countersEnd already computes its value independently from counterStart
+				//if ( (dataTypeNChar)floor((long double)((toRead-1)/DIMBLOCK)) == numBlockCounterStart) {
+				//	for (dataTypedimAlpha i = 0 ; i < sizeAlpha; i++) {
+				//		countersEnd[i] += countersStart[i];  //+1???
+				//	}
+				//	contInCurrentBlockEnd = contInCurrentBlockStart;
+				//}
 				
 				assert (updateSingleIntervalBW(vectRange, InFileBWT, k, currentPile, countersEnd, &numBlockCounterEnd, &contInCurrentBlockEnd, toRead, bufferBlock) == 1);
 				#if DEBUG == 1				
@@ -513,12 +514,13 @@ int EDSBWT::findMultipleDollarsBackward(std::vector<rangeElementBW> &vectRange, 
 						
 						//END
 						toRead = vectRange[k].endPosN;
-						if ( (dataTypeNChar)floor((long double)((toRead-1)/DIMBLOCK)) == numBlockCounterStart) {
-							for (dataTypedimAlpha i = 0 ; i < sizeAlpha; i++) {
-								countersEnd[i] += countersStart[i];  //+1???
-							}
-							contInCurrentBlockEnd = contInCurrentBlockStart;
-						}
+						//Commented since countersEnd already computes its value independently from counterStart
+						//if ( (dataTypeNChar)floor((long double)((toRead-1)/DIMBLOCK)) == numBlockCounterStart) {
+						//	for (dataTypedimAlpha i = 0 ; i < sizeAlpha; i++) {
+						//		countersEnd[i] += countersStart[i];  //+1???
+						//	}
+						//	contInCurrentBlockEnd = contInCurrentBlockStart;
+						//}
 						assert (updateSingleIntervalBW(vectRange, InFileBWT, k, currentPile, countersEnd, &numBlockCounterEnd, &contInCurrentBlockEnd, toRead, bufferBlock) == 1);
 						
 						for (dataTypedimAlpha i = 0 ; i < sizeAlpha; i++) {
