@@ -768,16 +768,7 @@ int EDSBWT::updateSingleIntervalBW(std::vector<rangeElementBW> &vectRange, FILE 
 				//else toTead==0 --> numBlock=0
 		
 				
-				if (numBlock == *numBlockCounter) {
-					//We are in the same block where counter is computed
-					//counter is computed at the position contInCurrentBlock
-					//In bufferBlock we already have the symbols
-					//For each symbol in the buffer, it updates the number of occurrences into counters
-					for (dataTypeNChar r=(*contInCurrentBlock); r<toRead; r++)        //CONTROLLA *******************
-						counters[alpha[(unsigned int)bufferBlock[r]]]++;    //increment the number of letter symbol into counters
-									
-				}
-				else if (numBlock > *numBlockCounter) {
+				{
 					//We are in another block and we need to read a new block in the BWT
 					for (dataTypedimAlpha r=0; r<sizeAlpha; r++)
 						counters[r] =  vectorOcc[currentPile][r][(numBlock)-1];   //vectorOcc is indexed by 0, so we have numBlock-1
@@ -786,7 +777,7 @@ int EDSBWT::updateSingleIntervalBW(std::vector<rangeElementBW> &vectRange, FILE 
 			
 					
 					dataTypeNChar numberRead = rankManySymbols(*InFileBWT, counters, toRead, &foundSymbol, bufferBlock);
-					assert (toRead <= numberRead);  //2024-06-05
+					assert (toRead <= numberRead); 
 				}
 				
 				*contInCurrentBlock=toRead;
