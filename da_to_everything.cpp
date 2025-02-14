@@ -65,7 +65,7 @@ int da_to_everything(string filename, dataTypeNChar BWT_length){
 
 
 	//Open ebwt
-	//n.b. viene aperto il file che non contiene la coda di dollari relativi al simbolo di parola vuota, quindi avrà una lunghezza diversa dal document array.
+	//n.b. The file does not contain the tail, so the length is different from document array.
 	string bwt_s = filename + ".ebwt";
 	FILE* bwt = fopen(bwt_s.c_str(),"r");
 	if (bwt == NULL) {
