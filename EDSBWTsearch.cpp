@@ -770,9 +770,10 @@ int EDSBWT::updateSingleIntervalBW(std::vector<rangeElementBW> &vectRange, FILE 
 				
 				{
 					//We are in another block and we need to read a new block in the BWT
+					if(numBlock>0){
 					for (dataTypedimAlpha r=0; r<sizeAlpha; r++)
 						counters[r] =  vectorOcc[currentPile][r][(numBlock)-1];   //vectorOcc is indexed by 0, so we have numBlock-1
-					
+					}
 					fseek (InFileBWT, numBlock*DIMBLOCK, 0);
 			
 					
