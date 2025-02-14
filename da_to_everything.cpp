@@ -55,7 +55,7 @@ int da_to_everything(string filename, dataTypeNChar BWT_length){
 	}
 	
 
-	//apri il document array per leggerlo
+	//Open document array
 	string da_s = filename + ".4.da";
 	FILE* da = fopen(da_s.c_str(),"rb");
 	if (da == NULL) {
@@ -64,7 +64,7 @@ int da_to_everything(string filename, dataTypeNChar BWT_length){
 	}
 
 
-	//apri la ebwt per leggerla
+	//Open ebwt
 	//n.b. viene aperto il file che non contiene la coda di dollari relativi al simbolo di parola vuota, quindi avrà una lunghezza diversa dal document array.
 	string bwt_s = filename + ".ebwt";
 	FILE* bwt = fopen(bwt_s.c_str(),"r");
