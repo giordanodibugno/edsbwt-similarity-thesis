@@ -20,7 +20,16 @@ cd EDS-BWT
 
 ### Requirements
 
-After dowloading EDS-BWT, install [gsufsort](https://github.com/felipelouza/gsufsort)
+After dowloading EDS-BWT, install [BCR](https://github.com/giovannarosone/BCR_LCP_GSA)
+
+```sh
+git clone https://github.com/giovannarosone/BCR_LCP_GSA
+cd BCR_LCP_GSA
+make STORE_ENDMARKER_POS=1
+cd ..
+```
+
+or alternatively, [gsufsort](https://github.com/felipelouza/gsufsort)
 
 ```sh
 git clone https://github.com/felipelouza/gsufsort.git
@@ -29,7 +38,7 @@ make TERMINATOR=0 DNA=1
 cd ..
 ```
 
-You can specify the path where gsufsort is installed in variable GSUFPATH of file EDS-BWTransform.sh.
+You can specify the path where BCR (or gsufsort) is installed in variable BCRPATH (or GSUFPATH) of file EDS-BWTransform.sh.
 You also need to install the [sdsl library](https://github.com/simongog/sdsl-lite) and specify the path of SDSL/include and SDSL/lib in the parameters SDSL_INC and SDSL_LIB of file makefile.
 
 
@@ -50,14 +59,14 @@ make RECOVERBW=0
 
 ## Run
 
-To compute the EDS-BWT of an elastic degenerate string written in file input.eds:
+To compute the EDS-BWT of an elastic degenerate string written in file input.eds, please run:
 
 ```sh
 ./EDS-BWTransform.sh input output
 ```
-where output is used as the base name of the output files.
+where output is used as the base name of the output files. By default, the script `EDS-BWTransform.sh` computes the extended Burrow-Wheeler transform of the collection of string in the eds by using BCR. However, one can choose to select gsufsort by setting BCR=0 in `EDS-BWTransform.sh`.  
 
-Afterwards, to search one or more patterns, contained in file patterns:
+To search one or more patterns, contained in file patterns, please run:
 ```sh
 ./EDSBWTsearch output patterns
 ```
