@@ -25,7 +25,7 @@ After dowloading EDS-BWT, install [BCR](https://github.com/giovannarosone/BCR_LC
 ```sh
 git clone https://github.com/giovannarosone/BCR_LCP_GSA
 cd BCR_LCP_GSA
-make STORE_ENDMARKER_POS=1
+make STORE_INDICES_DOLLARS=1
 cd ..
 ```
 
