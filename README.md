@@ -181,5 +181,11 @@ It can be checked using the tool with the following commands:
 ./EDSBWTsearch sample/test/test sample/test/kmers.txt
 ```
 
+## References
 
+Cioni L., Guerrini V., Rosone G., [The Burrows-Wheeler Transform of an Elastic-Degenerate String](https://ceur-ws.org/Vol-3811/paper240.pdf). In *Proceedings of the 25th Italian Conference on Theoretical Computer Science* ICTCS 2024. CEUR-WS.org, vol 3811, pp 66--80.
+
+--
+
+<small> Supported by PNRR project “THE—Tuscany Health Ecosystem” — Spoke 6 “Precision medicine & personalized healthcare”, funded by the European Commission under the NextGeneration EU programme.
 
