@@ -183,7 +183,10 @@ It can be checked using the tool with the following commands:
 
 ## References
 
-Cioni L., Guerrini V., Rosone G., [The Burrows-Wheeler Transform of an Elastic-Degenerate String](https://ceur-ws.org/Vol-3811/paper240.pdf). In *Proceedings of the 25th Italian Conference on Theoretical Computer Science* ICTCS 2024. CEUR-WS.org, vol 3811, pp 66--80.
+Lapo Cioni, Veronica Guerrini, Giovanna Rosone, [The Burrows-Wheeler Transform of an Elastic-Degenerate String](https://ceur-ws.org/Vol-3811/paper240.pdf). In *Proceedings of the 25th Italian Conference on Theoretical Computer Science* ICTCS 2024. CEUR-WS.org, vol 3811, pp 66--80.
+
+Lapo Cioni, Veronica Guerrini, Giovanna Rosone, [The Burrows-Wheeler transform of an elastic-degenerate string and its application to pattern matching](https://www.sciencedirect.com/science/article/pii/S030439752500564X),
+Theoretical Computer Science, Volume 1059, 2026, 115626, ISSN 0304-3975, https://doi.org/10.1016/j.tcs.2025.115626.
 
 --
 
