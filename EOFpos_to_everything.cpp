@@ -12,9 +12,9 @@ dataTypedimAlpha alpha[SIZE_ALPHA]; //Corresponding between the alphabet, the pi
 dataTypedimAlpha sizeAlpha;  //number of the different symbols in the input texts
 dataTypedimAlpha *alphaInverse;  //Corresponding between alpha[i] and the symbol as char
 
-dataTypeNChar buildFreq(string fileName);
-int remove_empty_symbols(string inputName);
-int EOFpos_to_everything(string filename, dataTypeNChar BWT_length);
+dataTypeNChar buildFreq(string fileName, dataTypeNChar empty_number);
+dataTypeNChar remove_empty_symbols(string inputName);
+int EOFpos_to_everything(string filename, dataTypeNChar BWT_length, dataTypeNChar empty_number);
 
 
 
@@ -30,15 +30,15 @@ int main(int argc, char *argv[]){
 	}
 	
 	string inputName = argv[1];	
-	remove_empty_symbols(inputName);
-	dataTypeNChar BWT_length = buildFreq(inputName);
-	EOFpos_to_everything(inputName, BWT_length);
+	dataTypeNChar empty_number = remove_empty_symbols(inputName);
+	dataTypeNChar BWT_length = buildFreq(inputName,empty_number);
+	EOFpos_to_everything(inputName, BWT_length, empty_number);
 	return 1;
 }
 
 
 
-int EOFpos_to_everything(string filename, dataTypeNChar BWT_length){
+int EOFpos_to_everything(string filename, dataTypeNChar BWT_length, dataTypeNChar empty_number){
 
 	string ext = ".aux";
 
@@ -63,7 +63,11 @@ int EOFpos_to_everything(string filename, dataTypeNChar BWT_length){
 		exit (1);
 	}
 	dataTypeNChar numchar = fread (&nText, sizeof(dataTypeNSeq), 1 ,eof);
-
+	if(empty_number>0){
+		dataTypeNChar n_bytes=(sizeof(dataTypeNSeq)+sizeof(dataTypeNChar)+sizeof(dataTypedimAlpha))*empty_number;
+		fseek(eof,-n_bytes, SEEK_END);
+	}
+	
 	//Open ebwt 
 	string bwt_s = filename + ".ebwt";
 	FILE* bwt = fopen(bwt_s.c_str(),"r");
@@ -89,9 +93,66 @@ int EOFpos_to_everything(string filename, dataTypeNChar BWT_length){
 		fwrite(&(alphaInverse[c]), sizeof(dataTypedimAlpha), 1, InfoFile);
 	}
 	
-	size_t currentPile;
+	size_t currentPile=0;
 
-    for (currentPile = 0 ; currentPile < sizeAlpha; ++currentPile) {
+	//currentPile0
+	assert(freq[alphaInverse[currentPile]] > 0);
+	bit_vector b;
+	b = bit_vector(freq[alphaInverse[currentPile]],0);
+
+	//Open output file partial bwt
+    string OutFileBWT_s = filename + "_bwt_" + to_string(currentPile) + ext;
+    OutFileBWT = fopen(OutFileBWT_s.c_str(), "wb");
+    if (OutFileBWT==NULL){
+        std::cerr << "Error opening: " << OutFileBWT_s << std::endl;
+        exit (EXIT_FAILURE);
+    }
+		
+	dataTypeNChar i,pos = 1;
+	dataTypeNSeq seqN=0;
+	dataTypeNChar posN=0;
+	dataTypedimAlpha pileN=0;
+	dataTypedimAlpha* BWTbuffer = new dataTypedimAlpha[SIZEBUFFER];
+		
+	dataTypeNChar numcharBWT=1;
+	dataTypeNChar numWrite=1;
+
+	int toRead = SIZEBUFFER;
+	while(numcharBWT>0){
+		if(freq[alphaInverse[currentPile]] - (pos - 1) < SIZEBUFFER){
+			toRead = freq[alphaInverse[currentPile]] - (pos - 1);
+		}
+		numcharBWT = fread(BWTbuffer,sizeof(dataTypedimAlpha),toRead,bwt);
+		numWrite = fwrite(BWTbuffer, sizeof(uchar), toRead, OutFileBWT);
+		assert(numcharBWT == numWrite);
+
+		for (i=0; i<numcharBWT; i++){
+			if(BWTbuffer[i] == TERMINATE_CHAR){
+				empty_number--;
+				b[pos-1] = 1;
+				numchar = fread (&seqN, sizeof(dataTypeNSeq), 1 , eof);
+				numchar = fread (&posN, sizeof(dataTypeNChar), 1 , eof);
+				numchar = fread (&pileN, sizeof(dataTypedimAlpha), 1 , eof);
+				assert(numchar==1);
+				fwrite(&seqN, sizeof(dataTypeNSeq), 1, InfoFile);					
+			}
+			
+			//counting the number of occurrences in BWT of the currentPile
+			tableOcc[(unsigned int)currentPile][alpha[(unsigned int)BWTbuffer[i]]]++;
+
+			pos++;
+		}
+	}
+	fclose(OutFileBWT);
+
+	rrr_vector<> rrrb(b);
+	string bvName = filename + "_bv_" + to_string(currentPile) + ext;
+	store_to_file(rrrb,bvName);
+
+	assert(empty_number==0);
+	fseek(eof,sizeof(dataTypeNSeq), SEEK_SET);
+
+    for (currentPile = 1 ; currentPile < sizeAlpha; ++currentPile) {
             
         assert(freq[alphaInverse[currentPile]] > 0);
 		bit_vector b;
@@ -104,20 +165,10 @@ int EOFpos_to_everything(string filename, dataTypeNChar BWT_length){
             std::cerr << "Error opening: " << OutFileBWT_s << std::endl;
             exit (EXIT_FAILURE);
         }
-		
-
-
-		dataTypeNChar i;
-		dataTypeNChar pos = 1;
+		pos = 1;
 		dataTypeNSeq seqN=0;
-		dataTypeNChar posN=0;
-		dataTypedimAlpha pileN=0;
-		dataTypedimAlpha* BWTbuffer = new dataTypedimAlpha[SIZEBUFFER];
-		
-		dataTypeNChar numcharBWT=1;
-		dataTypeNChar numWrite=1;
-
-		int toRead = SIZEBUFFER;
+		numcharBWT=1;
+		toRead = SIZEBUFFER;
 		while(numcharBWT>0){
 
 			if(freq[alphaInverse[currentPile]] - (pos - 1) < SIZEBUFFER){
@@ -191,7 +242,7 @@ int EOFpos_to_everything(string filename, dataTypeNChar BWT_length){
 
 
 
-dataTypeNChar buildFreq(string fileName) {
+dataTypeNChar buildFreq(string fileName, dataTypeNChar empty_number) {
    
     //Open BWT file
     string fnBWT = string(fileName) + ".ebwt";
@@ -225,7 +276,7 @@ dataTypeNChar buildFreq(string fileName) {
 		}
 	}
 
-	if(freq[TERMINATE_CHAR]==0){
+	if(freq[TERMINATE_CHAR]==empty_number){
 		std::cerr << "ERROR: The end-marker must be " << TERMINATE_CHAR << endl;
 		std::cerr << "If you want to use a different end-marker, set the parameter TERMINATE_CHAR in Parameters.h" << endl;
 		exit(1);
@@ -256,7 +307,7 @@ dataTypeNChar buildFreq(string fileName) {
 }
 
 
-int remove_empty_symbols(string fileName){
+dataTypeNChar remove_empty_symbols(string fileName){
 
 	dataTypeNChar bwt_length;
 	dataTypeNChar empty_number;
@@ -346,5 +397,5 @@ int remove_empty_symbols(string fileName){
     }
 	
 
-	return 1;
+	return empty_number;
 }
