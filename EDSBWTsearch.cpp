@@ -318,7 +318,7 @@ int EDSBWT::findMultipleDollarsBackward(std::vector<rangeElementBW> &vectRange, 
 				
 		#if DEBUG == 1
 		dataTypeNSeq numTotKmers = vectRange.size();
-		std::cerr << "findMultipleDollarsBackward: We want to compute the seqID of " << numTotKmers  << " sequences." << std::endl;
+		std::cerr << "findMultipleDollarsBackward: We want to compute the seqID of " << numTotKmers  << " intervals." << std::endl;
 		#endif
 		
 		std::vector< rangeElementBW > vectRangeCopy;
@@ -383,7 +383,7 @@ int EDSBWT::findMultipleDollarsBackward(std::vector<rangeElementBW> &vectRange, 
 					//Before, we find the block where toRead position is.
 					assert ( findBlockToReadBWT(currentPile, &toRead, &numBlock) == 1);
 					
-					//First time! Update counters con the symbols up to the previous block
+					//First time! Update counters with the symbols up to the previous block
 					if (numBlock > 0) {
 						for (dataTypedimAlpha r=0; r<sizeAlpha; r++)
 							countersStart[r] =  vectorOcc[currentPile][r][(numBlock)-1];   //vectorOcc is indexed by 0, so we have numBlock-1
