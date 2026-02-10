@@ -3,6 +3,8 @@
 #include <sdsl/bit_vectors.hpp>
 #include "Parameters.h"
 
+#define END_MARKER '#' //end-marker used for the string collection 
+
 using namespace std;
 using namespace sdsl;
 
@@ -12,9 +14,9 @@ dataTypedimAlpha alpha[SIZE_ALPHA]; //Corresponding between the alphabet, the pi
 dataTypedimAlpha sizeAlpha;  //number of the different symbols in the input texts
 dataTypedimAlpha *alphaInverse;  //Corresponding between alpha[i] and the symbol as char
 
-dataTypeNChar buildFreq(string fileName);
+dataTypeNChar buildFreq(string fileName, dataTypeNChar BWT_seqs);
 int da_to_everything(string filename, dataTypeNChar BWT_length);
-int remove_empty_symbols(string inputName);
+dataTypeNChar remove_empty_symbols(string inputName);
 
 
 
@@ -30,8 +32,8 @@ int main(int argc, char *argv[]){
 	}
 	
 	string inputName = argv[1];	
-	remove_empty_symbols(inputName);
-	dataTypeNChar BWT_length = buildFreq(inputName);
+	dataTypeNChar BWT_seqs =remove_empty_symbols(inputName);
+	dataTypeNChar BWT_length = buildFreq(inputName,BWT_seqs);
 	da_to_everything(inputName, BWT_length);
 	return 1;
 }
@@ -220,9 +222,8 @@ int da_to_everything(string filename, dataTypeNChar BWT_length){
 
 
 
-dataTypeNChar buildFreq(string fileName) {
-   
-    //Open LCP and DA and BWT files
+dataTypeNChar buildFreq(string fileName, dataTypeNChar BWT_seqs) {
+	
     string fnBWT = string(fileName) + ".ebwt";
    
     FILE *InBWT = fopen(fnBWT.c_str(), "rb");
@@ -258,7 +259,7 @@ dataTypeNChar buildFreq(string fileName) {
 			}
 	}
 
-	if(freq[TERMINATE_CHAR]==0){
+	if(freq[TERMINATE_CHAR]!= BWT_seqs){
 		std::cerr << "ERROR: The end-marker must be " << TERMINATE_CHAR << endl;
 		std::cerr << "If you want to use a different end-marker, set the parameter TERMINATE_CHAR in Parameters.h" << endl;
 		exit(1);
@@ -290,10 +291,11 @@ dataTypeNChar buildFreq(string fileName) {
 
 
 
-int remove_empty_symbols(string fileName){
+dataTypeNChar remove_empty_symbols(string fileName){
 
 	dataTypeNChar bwt_length;
 	dataTypeNChar empty_number;
+	dataTypeNChar numSeq=0;
 
 	//Open the file containing the number of symbols in the bwt and the number of empty-word symbols contained within
 	string emptyName = fileName+".empty.info";
@@ -353,6 +355,10 @@ int remove_empty_symbols(string fileName){
 				if (BWTbuffer[i] == EMPTY_CHAR){
 					fwrite(&(terminate_char), sizeof(dataTypedimAlpha), 1, ebwtFile);
 				}
+				else if (BWTbuffer[i] == END_MARKER){
+					fwrite(&(terminate_char), sizeof(dataTypedimAlpha), 1, ebwtFile);
+					numSeq++;
+				}
 				else{
 					fwrite(&(BWTbuffer[i]), sizeof(dataTypedimAlpha), 1, ebwtFile);
 				}
@@ -380,5 +386,5 @@ int remove_empty_symbols(string fileName){
     }
 
 
-	return 1;
+	return numSeq;
 }
