@@ -386,5 +386,5 @@ dataTypeNChar remove_empty_symbols(string fileName){
     }
 
 
-	return numSeq;
+	return numSeq+empty_number;
 }
