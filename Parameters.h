@@ -67,7 +67,7 @@ typedef unsigned long ulong;
 #define dataTypeNumSeq 2		
 
 // Type size for Number of Character in the input file (length of the BWT)
-#define dataTypeNumChar 2		
+#define dataTypeNumChar 3		
 
 
 //Set the types
