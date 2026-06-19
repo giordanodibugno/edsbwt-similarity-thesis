@@ -53,89 +53,11 @@
 using namespace std;
 using namespace sdsl;
 
-static vector<vector<string> > readEDSByLocus(string filename) // Parser di file .eds
-{
-	vector<vector<string> > loci;
-	ifstream edsFile(filename);
-	if (!edsFile.is_open()) {
-		cerr << "ERROR opening EDS file " << filename << endl;
-		exit(1);
-	}
-
-	vector<string> currentLocus;
-	string currentString;
-	bool insideLocus = false; // Variabile booleana che indica se in un istante stiamo analizzando dentro un locus
-	char current; // Carattere corrente
-
-	while (edsFile.get(current)) {
-		if (current == '\n' || current == '\r' || current == '\t' || current == ' ') {
-			continue; // Skip
-		}
-
-		if (current == '{') {
-			if (insideLocus) {
-				cerr << "ERROR parsing EDS file " << filename << ": nested '{' found" << endl;
-				exit(1);
-			}
-			insideLocus = true;
-			currentLocus.clear();
-			currentString.clear();
-		}
-		else if (current == '}') {
-			if (!insideLocus) {
-				cerr << "ERROR parsing EDS file " << filename << ": unmatched '}' found" << endl;
-				exit(1);
-			}
-			if (currentString == string(1, EMPTY_CHAR_EDS)) {
-				currentString.clear();
-			}
-			currentLocus.push_back(currentString);
-			loci.push_back(currentLocus);
-			currentString.clear();
-			currentLocus.clear();
-			insideLocus = false;
-		}
-		else if (current == ',') {
-			if (!insideLocus) {
-				cerr << "ERROR parsing EDS file " << filename << ": comma outside a locus" << endl;
-				exit(1);
-			}
-			if (currentString == string(1, EMPTY_CHAR_EDS)) {
-				currentString.clear();
-			}
-			currentLocus.push_back(currentString);
-			currentString.clear();
-		}
-		else {
-			if (!insideLocus) {
-				cerr << "ERROR parsing EDS file " << filename << ": symbol outside a locus" << endl;
-				exit(1);
-			}
-			currentString.push_back(current);
-		}
-	}
-
-	if (insideLocus) {
-		cerr << "ERROR parsing EDS file " << filename << ": missing closing '}'" << endl;
-		exit(1);
-	}
-
-	return loci;
-}
-
-EDSBWT::EDSBWT (string fileInput, string fileEDS, int mode, int num_threads)
-	: EDSBWT(fileInput, mode, num_threads)
-{
-	computeSimilarityFromEDS(fileEDS);
-}
-
-EDSBWT::EDSBWT (string fileInput, int mode, int num_threads)
+EDSBWT::EDSBWT (string fileInput, string filepatterns, int mode, int num_threads)
 {
     
 	std::cerr << "Backward Search\n";
 	ext = ".aux";
-	fileInputBase = fileInput;
-	resourcesLoaded = false;
 	
 	cout << "DEBUG: " << DEBUG << endl;
 	
@@ -253,19 +175,10 @@ EDSBWT::EDSBWT (string fileInput, int mode, int num_threads)
 		cout << endl;
 	#endif
 
-	delete [] fileBitVector;
-	resourcesLoaded = true;
-	
-}
-
-float EDSBWT::computeSimilarityFromEDS(string fileEDS)
-{
-	rank_support_v<1> rb_1(&rrrb);
-	bit_vector::select_1_type bsel_1(&rrrb);
 
 	#if RECOVERBW==1
-		//string searchOutput_s = fileInputBase + ".output.csv";
-		string searchOutput_s = fileEDS + "output.csv";
+		//string searchOutput_s = fileInput + ".output.csv";
+		string searchOutput_s = filepatterns + "output.csv";
 		std::ofstream searchOutput;
 		searchOutput.open(searchOutput_s,ios::out);
 		if(searchOutput.is_open()){
@@ -279,87 +192,100 @@ float EDSBWT::computeSimilarityFromEDS(string fileEDS)
 		}
 	#endif
 
+	dataTypeNSeq count_found=0, count_not_found=0;
 	#if DEBUG == 1
 		fprintf(stderr, "##BEFORE BACKWARD\nmalloc_count ### current peak: %zu\n##\n", malloc_count_peak());
 		std::cerr << "backwardSearch\n";
 	#endif
-
-	vector<vector<string> > loci = readEDSByLocus(fileEDS);
-	vector<float> locusSimilarities;
-	dataTypeNChar len_match;
-	std::string kmer;
-	dataTypeNChar globalStringId=0;
+	std::ifstream InFileKmer(filepatterns);
+	std::string kmer; 
+	dataTypeNChar i=0;
 	dataTypeNChar lenKmer=0;
-	float totalNum = 0.0; // Numeratore frazione finale
-	float totalDen = 0.0; // Denominatore frazione finale
-
-	cout << "Loci read from EDS file: " << loci.size() << endl;
-
-	for (dataTypeNSeq locusId=0; locusId<loci.size(); locusId++) {
-		float locusNum = 0.0;
-		float locusDen = 0.0;
-		cout << "Locus " << locusId + 1 << " contains " << loci[locusId].size() << " strings" << endl;
-
-		for (dataTypeNSeq stringId=0; stringId<loci[locusId].size(); stringId++) {
-			kmer = loci[locusId][stringId];
-			lenKmer = kmer.length();
-
+	while (std::getline(InFileKmer, kmer)) {		
+		lenKmer = kmer.length();
+		#if DEBUG == 1
 			cout << "Pattern: " << kmer << " of length " << lenKmer << endl;
+		#endif
 
-			if (lenKmer == 0) {
-				cout << "len_match=0 (empty string skipped)" << endl << endl;
-				continue;
-			}
-
-			locusDen += lenKmer;
-			totalDen += lenKmer;
-
-			#if DEBUG==1
-			time_t startI,endI;
-			double difI;
-				time (&startI);
-			#endif
-			
-			len_match=backwardSearch(fileInputBase.c_str(), fileEDS.c_str(), globalStringId+1, kmer, lenKmer, rb_1, bsel_1);
-			
-			locusNum += len_match;
-			totalNum += len_match;
-			std::cout << "len_match=" << len_match << endl;
-			std::cout << endl;
-
-			#if DEBUG==1
-				time (&endI);
-				difI = difftime (endI,startI);
-				std::cerr << "End backwardSearch " << endI << " seconds\n";
-				std::cerr << "backwardSearch tooks " << difI << " seconds\n";
-			#endif
-			globalStringId++;
+		#if DEBUG==1
+		time_t startI,endI;
+		double difI;
+			time (&startI);
+		#endif
+		
+		
+		
+		
+		
+		
+		
+		if( backwardSearch(fileInput.c_str(), filepatterns.c_str(), i+1, kmer, lenKmer, rb_1, bsel_1) > 0){
+			//std::cerr << "1" << endl;
+			count_found++;
 		}
-
-		float locusSim = 0.0;
-		if (locusDen > 0.0) {
-			locusSim = locusNum/locusDen;
+		else{
+			//std::cerr << "0" << endl;
+			count_not_found++;
 		}
-		locusSimilarities.push_back(locusSim);
-		std::cout << "Similarita locus " << locusId + 1 << " (" << locusNum << "/" << locusDen << "):" << locusSim << endl;
-		std::cout << endl;
+		
+		#if DEBUG==1
+			time (&endI);
+			difI = difftime (endI,startI);
+			std::cerr << "End backwardSearch " << endI << " seconds\n";
+			std::cerr << "backwardSearch tooks " << difI << " seconds\n";
+		#endif
+		i++;
 	}
+	InFileKmer.close();
+	
+	std::cerr << endl;
+	std::cerr << "count_found = " << count_found << endl;
+	std::cerr << "count_not_found = " << count_not_found << endl;
 
-	float sim = 0.0;
-	if (totalDen > 0.0) {
-		sim = totalNum/totalDen;
-	}
-	std::cout << "Array similarita loci: [";
-	for (dataTypeNSeq locusId=0; locusId<locusSimilarities.size(); locusId++) {
-		if (locusId > 0) {
-			std::cout << ", ";
-		}
-		std::cout << locusSimilarities[locusId];
-	}
-	std::cout << "]" << endl;
-	std::cout << "Similarita totale EDS ("<<totalNum<<"/"<<totalDen<<"):" << sim << endl;
+    
+    //Free the memory
+    for (dataTypedimAlpha j = 0 ; j < sizeAlpha; j++) {
+        delete [] tableOcc[j];
+        tableOcc[j] = NULL;
+    }
+    delete [] tableOcc;
+	
+	for (dataTypedimAlpha j = 0 ; j < sizeAlpha; j++) {
+        delete [] EOF_ID[j];
+        EOF_ID[j] = NULL;
+    }
+    delete [] EOF_ID;
 
-	return sim;
+    delete[] alphaInverse;
+    
+    /////////////
+    char *filenameIn = new char[128];
+
+    
+    #if (deletePreprocessingFile == 1) && (KEEP_eBWT_IN_EXT_MEMORY == 1)
+        char *filename = new char[100];
+		sprintf (filename, "_info%s", ext.c_str());
+        sprintf (filenameIn,"%s%s",fileInput.c_str(), filename);
+        if (remove(filenameIn)!=0)
+            std::cerr << "Error deleting " << filenameIn << " aux files" << std::endl;
+        for (dataTypedimAlpha g = 0 ; g < sizeAlpha; g++) {
+                sprintf (filename, "_bwt_%d", g);
+                sprintf (filenameIn,"%s%s%s",fileInput.c_str(), filename,ext.c_str());
+                if (remove(filenameIn)!=0)
+                    std::cerr << "Error deleting " << filenameIn << " aux files" << std::endl;
+				sprintf (filename, "_bv_%d", g);
+                sprintf (filenameIn,"%s%s%s",fileInput.c_str(), filename,ext.c_str());
+				if (remove(filenameIn)!=0)
+                    std::cerr << "Error deleting " << filenameIn << " aux files" << std::endl;
+				sprintf (filename, "_bv_%d", g);
+                sprintf (filenameIn,"%s%s%s",fileInput.c_str(), filename,ext.c_str());
+				if (remove(filenameIn)!=0)
+                    std::cerr << "Error deleting " << filenameIn << " aux files" << std::endl;
+        }
+        delete [] filename;
+    #endif
+    delete [] filenameIn;
+	
 }
 
 
@@ -674,10 +600,11 @@ int EDSBWT::findMultipleDollarsBackward(std::vector<rangeElementBW> &vectRange, 
 int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq n_kmer, string kmer, dataTypelenSeq lenKmer, rank_support_v<1> &rb_1, bit_vector::select_1_type &bsel_1)
 {
 	//std::cerr << "Vector size of the occurrences: " << DIMBLOCK  << std::endl;
+	int res = 0;
 
-//#if DEBUG==1
+#if DEBUG==1
 	std::cerr << "Pattern: " << kmer << "\n";
-//#endif
+#endif
 
 	//Initialization
 	uchar symbol = kmer[lenKmer-1];
@@ -710,13 +637,8 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 	time_t start,end;
 	#endif
 
-	//START backwardsearch (prima iterazione con ultimo carattere fatta sopra)
-	
-	//vectRangeOtherPile è un vettore che memorizza gli intervalli della backwardsearch
-	
-	dataTypeNChar posSymb=lenKmer-1;
 
-	for (; posSymb>0 && !vectRangeOtherPile.empty(); posSymb--) {   //For each symbol of the kmer
+	for (dataTypelenSeq posSymb=lenKmer-1; posSymb>0 && !vectRangeOtherPile.empty(); posSymb--) {   //For each symbol of the kmer
 
 //		time(&start);
 
@@ -770,17 +692,16 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 			cerr << "After updateIntervals symbPile: " << (int)symbPile << "\n";
 		#endif
 		
-		//MODIFICATO
-		//#if RECOVERBW==0
-		//	if (vectRangeOtherPile.empty()) {
-		//		std::cerr << "Pattern not found, interrupted in position " << posSymb << "\n";			
-		//	}
-		//#endif
+		#if RECOVERBW==0
+			if (vectRangeOtherPile.empty()) {
+				std::cerr << "Pattern not found, interrupted in position " << posSymb << "\n";			
+			}
+		#endif
 
 //		std::cerr << "--------------------------------------backward search: the cycle for " << "symbol in position " << (int)posSymb << " took " << difftime(end,start) << " seconds\n\n";
 	
 	}
-	//END backwardsearch
+
 
 	#if DEBUG==1
 	cout<<"++++backwardSearch - maxInterval= "<< maxInterval << "\n";
@@ -793,8 +714,9 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 	fprintf(stderr, "##\nmalloc_count ### current peak: %zu\n##\n", malloc_count_peak());
 	#endif
 	
-	//MODIFICATO -> tolto il for
-	/*
+
+
+//	#if RECOVERBW == 0
 		dataTypeNSeq intervalLength;
 		for (dataTypeNSeq tt=0; tt<vectRangeOtherPile.size(); tt++) {
 			intervalLength = vectRangeOtherPile[tt].endPosN - vectRangeOtherPile[tt].startPosN +1;
@@ -803,7 +725,10 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 			}
 		}
 		cout << "Found " << res << " starting positions of occurrences of pattern number " << n_kmer << endl;
-	*/
+//	#else
+//		if(!vectRangeOtherPile.empty())
+//			res=1;
+//	#endif
 
 	#if RECOVERBW == 1
 		#if DEBUG == 1
@@ -820,18 +745,11 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 			vectRange.insert(std::end(vectRange), eleC);
 		}
 		assert(findMultipleDollarsBackward(vectRange,fileInput,fileOutDecode,n_kmer,rb_1,bsel_1));
-	//#else //COMMENTATO
-	//	vector<rangeElement>().swap(vectRangeOtherPile);   // clear vectRange reallocating 
+	#else
+		vector<rangeElement>().swap(vectRangeOtherPile);   // clear vectRange reallocating 
 	#endif
 
-	//MODIFICATO -> valore di ritorno lunghezza del match
-	//return res;
-	//posSymb -> contiene l'indice del mismatch, se vectRangeOtherPile è vuoto
-	if (vectRangeOtherPile.empty())
-		return lenKmer-posSymb-1;
-	else
-		return lenKmer;
-
+	return res;
 }
 
 #if RECOVERBW==1
@@ -1935,25 +1853,5 @@ void EDSBWT::print_interval_number (){
 
 EDSBWT::~EDSBWT()
 {
-	if (!resourcesLoaded) {
-		return;
-	}
 
-	for (dataTypedimAlpha j = 0 ; j < sizeAlpha; j++) {
-		delete [] tableOcc[j];
-		tableOcc[j] = NULL;
-	}
-	delete [] tableOcc;
-	tableOcc = NULL;
-
-	for (dataTypedimAlpha j = 0 ; j < sizeAlpha; j++) {
-		delete [] EOF_ID[j];
-		EOF_ID[j] = NULL;
-	}
-	delete [] EOF_ID;
-	EOF_ID = NULL;
-
-	delete [] alphaInverse;
-	alphaInverse = NULL;
-	resourcesLoaded = false;
 }

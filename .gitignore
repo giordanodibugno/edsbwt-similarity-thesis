@@ -1,0 +1,77 @@
+# Build
+*.o
+*.a
+*.so
+
+# Eseguibili
+EDSBWTsearch
+EDSBWTsimilarity
+eds_to_fasta
+EOFpos_to_everything
+da_to_everything
+mainEDS-BWT
+
+# File generati
+*.aux
+*.ebwt
+*.bitvector
+*.info
+*.EOFpos
+
+# File di test generati
+test.*
+
+# Risultati
+results/
+
+# Backup
+backups_tesi_edsbwt_*
+
+# Archivi
+*.zip
+
+# Editor
+.vscode/
+*.swp
+*~
+
+# Librerie compilate
+sdsl_lib/lib/
+sdsl_lib/build/
+
+# Dataset eventualmente copiati qui
+dataset/
+
+# Librerie esterne / submodule
+sdsl-lite/
+sdsl_lib/
+BCR_LCP_GSA/
+gsufsort/
+
+# Indici e file generati
+edsbwt_form/
+*.ebwt
+*.bitvector
+*.EOFpos
+*.empty.info
+*.info
+*.len
+*.fasta
+*.aux
+
+# Output test
+*output.csv
+results/
+
+# Backup
+*.backup*
+backups_tesi_edsbwt_*
+
+# Build / binari
+*.o
+EDSBWTsearch
+EDSBWTsimilarity
+eds_to_fasta
+EOFpos_to_everything
+da_to_everything
+mainEDS-BWT

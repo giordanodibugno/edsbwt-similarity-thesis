@@ -38,18 +38,18 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-
+	//Input 
 	if( argc != 3 ) {
-		std::cerr << "usage: " << argv[0] << " inputEBWTfile inputPATTERNfile" << std::endl;
+		std::cerr << "usage: " << argv[0] << " inputEBWTfile inputEDSfile" << std::endl;
 		std::cerr << "where:" << std::endl;
 		std::cerr << "  inputEBWTfile is the BWT filename without the extension .ebwt (and .ebwt.qs for the QS string)" << std::endl;
-		std::cerr << "  inputPATTERNfile is the pattern file" << std::endl;
+		std::cerr << "  inputEDSfile is the EDS file whose loci will be searched" << std::endl;
 		exit(1);
     }
 
 	std::cout << "BCR_eds: " << argv[0] << std::endl;
 	std::cout << "BCR_eds: The input ebwt file is " << argv[1] << std::endl;
-	std::cout << "BCR_eds: The pattern file is " << argv[2] << std::endl;
+	std::cout << "BCR_eds: The EDS file is " << argv[2] << std::endl;
 
 	#if DEBUG == 1
 	if (MODE == 1)
@@ -67,7 +67,9 @@ int main(int argc, char *argv[])
  
 	EDSBWT *BCRdec;
 
-	BCRdec = new EDSBWT(fileInput, filePattern, MODE, num_threads);
+	BCRdec = new EDSBWT(fileInput, MODE, num_threads);
+	float similarity = BCRdec->computeSimilarityFromEDS(filePattern);
+	std::cout << "BCR_eds: Returned similarity is " << similarity << std::endl;
     
 	#if RECOVERBW==1
 		std::cerr << "\nThe csv file is ready! \n";
@@ -79,7 +81,5 @@ int main(int argc, char *argv[])
 
 	std::cerr << "The End!\n";
 
-    return 1;
+    return 0;
 }
-
-

@@ -66,9 +66,9 @@ To compute the EDS-BWT of an elastic degenerate string written in file input.eds
 ```
 where output is used as the base name of the output files. By default, the script `EDS-BWTransform.sh` computes the extended Burrow-Wheeler transform of the collection of string in the eds by using BCR. However, one can choose to select gsufsort by setting BCR=0 in `EDS-BWTransform.sh`.  
 
-To search one or more patterns, contained in file patterns, please run:
+To search all strings grouped by locus in an EDS file, please run:
 ```sh
-./EDSBWTsearch output patterns
+./EDSBWTsearch output input.eds
 ```
 
 
@@ -103,15 +103,12 @@ This produces the file output.eds, which will have the brackets as required.
 Finally, your input must not contain the character EMPTY_CHAR (default is Z), which is internally used to represent empty strings.
 If your input does contain this character, please change the parameter EMPTY_CHAR in Parameters.h to a character that is not used in your input and is lexicographically greater than all the characters in your input. 
 
-### Patterns
+### Search EDS
 
-The patterns file is a text file where each pattern is in a different line, ending with UNIX end-of-line markers (LF), as opposed to Windows ones (CR+LF).
-Empty lines are not allowed. Example:
+The search input is an EDS file. Each degenerate symbol is treated as a locus, and each string inside the locus is searched as a pattern against the EDS-BWT index. Example:
 
 ```sh
-TATT
-ACT
-TTAT
+{TT,TA,C}{T}{TT,A,G}{TT,}{ATT}
 ```
 
 
@@ -134,9 +131,11 @@ Output files are written in the same directory as the input eds file. The filena
 
 ### Search output
 
-EDS-BWT outputs the starting position for each occurrence of the pattern, giving the degenerate symbol, the string number and the position in the string. If more than one occurrence begins at the same position in the same string, they are counted as just one occurrence.
+EDS-BWT searches every string of every locus in the input EDS and outputs a similarity value for each locus. Each locus similarity is computed as the sum of the matched lengths divided by the sum of the searched string lengths for that locus. Empty strings are skipped in this length-normalized score.
 
-The ouput is a .csv file, written in the same directory as the pattern, with "output.csv" appended to the filename.
+If compiled with `RECOVERBW=1`, EDS-BWT also outputs the starting position for each occurrence of each searched string, giving the degenerate symbol, the string number and the position in the string. If more than one occurrence begins at the same position in the same string, they are counted as just one occurrence.
+
+The positional output is a .csv file, written in the same directory as the EDS search file, with "output.csv" appended to the filename.
 Each line is an occurrence. Columns are separated by tabulation, not commas, and give the following informations, in order:
 
 - \#Pat: the index of the pattern found;
@@ -150,19 +149,7 @@ Each line is an occurrence. Columns are separated by tabulation, not commas, and
 - S_j\[r\]: the position (starting from 0) at which the occurrence begins inside the string.
 
 
-For example, the output for searching patterns
-```sh
-TATT
-ACT
-TTAT
-```
-
-in
-```sh
-{TT,TA,C}{T}{TT,A,G}{TT,}{ATT}
-```
-
-is
+For example, positional output may look like:
 
 ```sh
 \#Pat	$_i	D[i]	S_j	S_j[r]
@@ -178,7 +165,7 @@ is
 It can be checked using the tool with the following commands:
 ```sh
 ./EDS-BWTransform.sh sample/test/test
-./EDSBWTsearch sample/test/test sample/test/kmers.txt
+./EDSBWTsearch sample/test/test sample/test/test.eds
 ```
 
 ## References
@@ -191,4 +178,3 @@ Theoretical Computer Science, Volume 1059, 2026, 115626, ISSN 0304-3975, https:/
 --
 
 <small> Supported by PNRR project “THE—Tuscany Health Ecosystem” — Spoke 6 “Precision medicine & personalized healthcare”, funded by the European Commission under the NextGeneration EU programme.
-

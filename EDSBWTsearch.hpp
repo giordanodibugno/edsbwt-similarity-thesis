@@ -51,12 +51,15 @@ using namespace sdsl;
 class EDSBWT
 {
 public:
+    EDSBWT(string, int, int);
     EDSBWT(string, string, int, int);
     ~EDSBWT();
 
     string  fileOutBwt;
     string  fileOutCyc;
     string  ext;
+    string  fileInputBase;
+    bool resourcesLoaded;
     
 	std::vector<rangeElement> vectRangeDollarPile;
 	std::vector<rangeElement> vectRangeOtherPile;
@@ -109,6 +112,7 @@ public:
     int convertFromCycFileToFastaOrFastq( string );
 	
 	////////2024///////
+	float computeSimilarityFromEDS(string fileEDS);
 	int backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq n_kmer, string kmers, dataTypelenSeq lenKmer, rank_support_v<1> &rb_1, bit_vector::select_1_type &bsel_1);
     int computeCountersInSingleInterval(FILE *InFileBWT, dataTypeNChar toRead, dataTypedimAlpha currentPile,dataTypeNChar * counters);
 

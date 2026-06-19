@@ -10,8 +10,8 @@ DEFINES = -DRECOVERBW=$(RECOVERBW) -DFASTQ=$(FASTQ) -DOMP=$(OMP)
 #OMP_LIB = -fopenmp
 
 #SDSL
-SDSL_INC = $(HOME)/local/include
-SDSL_LIB = $(HOME)/local/lib
+SDSL_INC = /dati/g.dibugno/EDS-BWT/sdsl_lib/include
+SDSL_LIB = /dati/g.dibugno/EDS-BWT/sdsl_lib/lib
 
 CPPFLAGS = -Wall -ansi -pedantic -g -O3 -std=c++11 $(DEFINES) 
 #$(OMP_LIB)
@@ -20,11 +20,15 @@ CPPFLAGS = -Wall -ansi -pedantic -g -O3 -std=c++11 $(DEFINES)
 CPPFLAGS += -I$(SDSL_INC) 
 LDLIBS = -L$(SDSL_LIB) $(CPPFLAGS) -lsdsl -ldivsufsort -ldivsufsort64 -ldl
 
-all: mainEDS-BWT converter-gsuf converter-BCR eds2fasta stringCheck
+all: mainEDS-BWT similarity converter-gsuf converter-BCR eds2fasta stringCheck
 
 mainEDS-BWT_obs = mainEDS-BWT.o EDSBWTsearch.o Sorting.o malloc_count/malloc_count.o
 mainEDS-BWT: $(mainEDS-BWT_obs)
 	$(CC) -o EDSBWTsearch $(mainEDS-BWT_obs) $(LDLIBS)  
+
+similarity_obs = EDSBWTsimilarity.o EDSBWTsearch.o Sorting.o malloc_count/malloc_count.o
+similarity: mainEDS-BWT eds2fasta converter-BCR $(similarity_obs)
+	$(CC) -o EDSBWTsimilarity $(similarity_obs) $(LDLIBS)  
 
 converter-gsuf_obs = da_to_everything.o
 converter-gsuf: $(converter-gsuf_obs)
@@ -43,7 +47,7 @@ stringCheck: $(stringCheck_obs)
 	$(CC) -o stringCheck $(stringCheck_obs) $(LDLIBS)  
 
 clean:
-	rm -f core *.o *~ EDSBWTsearch da_to_everything EOFpos_to_everything eds_to_fasta stringCheck
+	rm -f core *.o *~ EDSBWTsearch EDSBWTsimilarity da_to_everything EOFpos_to_everything eds_to_fasta stringCheck
 
 depend:
 	$(CC)  -MM *.cpp *.c > dependencies.mk
