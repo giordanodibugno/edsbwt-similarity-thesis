@@ -3,7 +3,7 @@
 *.a
 *.so
 
-# Eseguibili
+# Eseguibili del progetto principale
 EDSBWTsearch
 EDSBWTsimilarity
 eds_to_fasta
@@ -17,14 +17,19 @@ mainEDS-BWT
 *.bitvector
 *.info
 *.EOFpos
+*.empty.info
+*.len
+*.fasta
 
 # File di test generati
 test.*
 
 # Risultati
 results/
+*output.csv
 
 # Backup
+*.backup*
 backups_tesi_edsbwt_*
 
 # Archivi
@@ -42,36 +47,10 @@ sdsl_lib/build/
 # Dataset eventualmente copiati qui
 dataset/
 
-# Librerie esterne / submodule
+# Librerie esterne che NON vuoi nel repository
 sdsl-lite/
 sdsl_lib/
-BCR_LCP_GSA/
 gsufsort/
 
-# Indici e file generati
+# Indici generati
 edsbwt_form/
-*.ebwt
-*.bitvector
-*.EOFpos
-*.empty.info
-*.info
-*.len
-*.fasta
-*.aux
-
-# Output test
-*output.csv
-results/
-
-# Backup
-*.backup*
-backups_tesi_edsbwt_*
-
-# Build / binari
-*.o
-EDSBWTsearch
-EDSBWTsimilarity
-eds_to_fasta
-EOFpos_to_everything
-da_to_everything
-mainEDS-BWT
