@@ -11,7 +11,6 @@
 
 #include <cerrno>
 #include <cstring>
-#include <dirent.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -126,32 +125,14 @@ static void removeIfExists(const string& path)
     }
 }
 
-static void cleanupBCRCycFiles()
-{
-    DIR* dir = opendir(".");
-    if (dir == NULL) {
-        cerr << "Warning: could not open current directory to clean cyc files: " << strerror(errno) << endl;
-        return;
-    }
-
-    struct dirent* entry = NULL;
-    while ((entry = readdir(dir)) != NULL) {
-        string name = entry->d_name;
-        if (name.size() > 8 && name.substr(0, 4) == "cyc." && name.substr(name.size() - 4) == ".txt") {
-            removeIfExists(name);
-        }
-    }
-
-    closedir(dir);
-}
-
 static void cleanupIndexFiles(const string& outputBase)
 {
     removeIfExists(outputBase + ".fasta");
     removeIfExists(outputBase + ".len");
     removeIfExists(outputBase + ".info");
     removeIfExists(outputBase + ".empty.info");
-    removeIfExists(outputBase + ".EOFpos");
+    removeIfExists(outputBase + ".bwt");
+    removeIfExists(outputBase + ".4.da");
     removeIfExists(outputBase + ".ebwt");
     removeIfExists(outputBase + ".lcp");
     removeIfExists(outputBase + ".da");
@@ -199,8 +180,6 @@ static int buildEDSBWTIndex(const string& edsPath, const string& outputBase)
 
     cout << "Index missing or older than EDS, rebuilding it." << endl;
     cleanupIndexFiles(outputBase);
-    cleanupBCRCycFiles();
-
     int status = runCommand(vector<string>{"./eds_to_fasta", edsPath, outputBase});
     if (!fileExists(outputBase + ".fasta")) {
         cerr << "eds_to_fasta failed for " << edsPath << " with exit code " << status << endl;
@@ -208,10 +187,10 @@ static int buildEDSBWTIndex(const string& edsPath, const string& outputBase)
         return status == 0 ? 1 : status;
     }
 
-    status = runCommand(vector<string>{"BCR_LCP_GSA/BCR_LCP_GSA", outputBase + ".fasta", outputBase});
-    cleanupBCRCycFiles();
-    if (!fileExists(outputBase + ".ebwt") || !fileExists(outputBase + ".EOFpos")) {
-        cerr << "BCR_LCP_GSA failed for " << outputBase << " with exit code " << status << endl;
+    status = runCommand(vector<string>{"gsufsort/gsufsort", outputBase + ".fasta",
+                                       "--da", "--bwt", "--output", outputBase});
+    if (!fileExists(outputBase + ".bwt") || !fileExists(outputBase + ".4.da")) {
+        cerr << "gsufsort failed for " << outputBase << " with exit code " << status << endl;
         cleanupIndexFiles(outputBase);
         return status == 0 ? 1 : status;
     }
@@ -220,12 +199,13 @@ static int buildEDSBWTIndex(const string& edsPath, const string& outputBase)
     removeIfExists(outputBase + ".len");
     removeIfExists(outputBase + ".info");
 
-    status = runCommand(vector<string>{"./EOFpos_to_everything", outputBase});
-    removeIfExists(outputBase + ".EOFpos");
+    status = runCommand(vector<string>{"./da_to_everything", outputBase});
     removeIfExists(outputBase + ".empty.info");
+    removeIfExists(outputBase + ".bwt");
+    removeIfExists(outputBase + ".4.da");
 
     if (!fileExists(outputBase + "_info.aux")) {
-        cerr << "EOFpos_to_everything failed for " << outputBase << " with exit code " << status << endl;
+        cerr << "da_to_everything failed for " << outputBase << " with exit code " << status << endl;
         cleanupIndexFiles(outputBase);
         return status == 0 ? 1 : status;
     }
@@ -280,7 +260,5 @@ int main(int argc, char *argv[])
     cout << "Similarity: " << finalSimilarity << endl;
 
     cout << "\nIndexes kept in edsbwt_form/." << endl;
-    cleanupBCRCycFiles();
-
     return 0;
 }

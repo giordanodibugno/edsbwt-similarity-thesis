@@ -10,8 +10,8 @@ DEFINES = -DRECOVERBW=$(RECOVERBW) -DFASTQ=$(FASTQ) -DOMP=$(OMP)
 #OMP_LIB = -fopenmp
 
 #SDSL
-SDSL_INC = /dati/g.dibugno/EDS-BWT/sdsl_lib/include
-SDSL_LIB = /dati/g.dibugno/EDS-BWT/sdsl_lib/lib
+SDSL_INC = ./sdsl_lib/include
+SDSL_LIB = ./sdsl_lib/lib
 
 CPPFLAGS = -Wall -ansi -pedantic -g -O3 -std=c++11 $(DEFINES) 
 #$(OMP_LIB)
@@ -20,14 +20,14 @@ CPPFLAGS = -Wall -ansi -pedantic -g -O3 -std=c++11 $(DEFINES)
 CPPFLAGS += -I$(SDSL_INC) 
 LDLIBS = -L$(SDSL_LIB) $(CPPFLAGS) -lsdsl -ldivsufsort -ldivsufsort64 -ldl
 
-all: mainEDS-BWT similarity converter-gsuf converter-BCR eds2fasta stringCheck
+all: mainEDS-BWT similarity converter-gsuf eds2fasta stringCheck
 
 mainEDS-BWT_obs = mainEDS-BWT.o EDSBWTsearch.o Sorting.o malloc_count/malloc_count.o
 mainEDS-BWT: $(mainEDS-BWT_obs)
 	$(CC) -o EDSBWTsearch $(mainEDS-BWT_obs) $(LDLIBS)  
 
 similarity_obs = EDSBWTsimilarity.o EDSBWTsearch.o Sorting.o malloc_count/malloc_count.o
-similarity: mainEDS-BWT eds2fasta converter-BCR $(similarity_obs)
+similarity: mainEDS-BWT eds2fasta converter-gsuf $(similarity_obs)
 	$(CC) -o EDSBWTsimilarity $(similarity_obs) $(LDLIBS)  
 
 converter-gsuf_obs = da_to_everything.o

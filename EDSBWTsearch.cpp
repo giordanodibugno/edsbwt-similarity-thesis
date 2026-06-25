@@ -243,7 +243,12 @@ EDSBWT::EDSBWT (string fileInput, int mode, int num_threads)
 		fprintf(stderr, "##BEFORE select_1_type\nmalloc_count ### current peak: %zu\n##\n", malloc_count_peak());
 	#endif
 	bit_vector::select_1_type bsel_1(&rrrb);
-	first_symbol_index = bsel_1(2)-1;
+	dataTypeNSeq numLoci = rb_1(rrrb.size());
+	if (numLoci == 0) {
+		std::cerr << "Error: the EDS bitvector contains no loci" << std::endl;
+		exit(1);
+	}
+	first_symbol_index = numLoci > 1 ? bsel_1(2)-1 : rrrb.size()-1;
 
 	#if DEBUG == 1
 	fprintf(stderr, "##AFTER select_1_type\nmalloc_count ### current peak: %zu\n##\n", malloc_count_peak());
@@ -304,7 +309,7 @@ float EDSBWT::computeSimilarityFromEDS(string fileEDS)
 			kmer = loci[locusId][stringId];
 			lenKmer = kmer.length();
 
-			cout << "Pattern: " << kmer << " of length " << lenKmer << endl;
+// 			cout << "Pattern: " << kmer << " of length " << lenKmer << endl;
 
 			if (lenKmer == 0) {
 				cout << "len_match=0 (empty string skipped)" << endl << endl;
@@ -676,7 +681,7 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 	//std::cerr << "Vector size of the occurrences: " << DIMBLOCK  << std::endl;
 
 //#if DEBUG==1
-	std::cerr << "Pattern: " << kmer << "\n";
+// 	std::cerr << "Pattern: " << kmer << "\n";
 //#endif
 
 	//Initialization

@@ -125,6 +125,9 @@ int main (int argc, char *argv[]){
 					chars++;
 				}
 			}
+			else if(current == '\n' || current == '\r'){
+				continue;
+			}
 			else if(current == null_char_input){
 				lista<<null_char;
 				empty_counter++;

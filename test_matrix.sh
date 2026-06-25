@@ -9,8 +9,8 @@ OUT_DIR="$SCRIPT_DIR/results"
 
 SEARCH_BIN="$SCRIPT_DIR/EDSBWTsearch"
 EDS2FASTA="$SCRIPT_DIR/eds_to_fasta"
-EOF_TOOL="$SCRIPT_DIR/EOFpos_to_everything"
-BCR_BIN="$SCRIPT_DIR/BCR_LCP_GSA/BCR_LCP_GSA"
+DA_TOOL="$SCRIPT_DIR/da_to_everything"
+GSUF_BIN="$SCRIPT_DIR/gsufsort/gsufsort"
 
 mkdir -p "$OUT_DIR" "$INDEX_DIR"
 
@@ -23,13 +23,10 @@ check_executable() {
     fi
 }
 
-cleanup_cyc_files() {
-    find "$SCRIPT_DIR" -maxdepth 1 -type f -name "cyc.*.txt" -delete
-}
-
 cleanup_partial_index() {
     local base="$1"
-    rm -f "$base.fasta" "$base.len" "$base.info" "$base.EOFpos"
+    rm -f "$base.fasta" "$base.len" "$base.info" "$base.empty.info"
+    rm -f "$base.bwt" "$base.4.da"
     rm -f "$base.ebwt" "$base.lcp" "$base.da" "$base.posSA" "$base.SAP" "$base.bitvector"
     rm -f "${base}_info.aux" "${base}_alpha.txt" "${base}_tableOcc.txt"
     rm -f "${base}"_bwt_*.aux "${base}"_bv_*.aux
@@ -54,8 +51,6 @@ build_index() {
 
     echo "Creo indice: $name" >&2
     cleanup_partial_index "$base"
-    cleanup_cyc_files
-
     "$EDS2FASTA" "$eds" "$base" > /dev/null 2>&1
 
     if [[ ! -f "$base.fasta" ]]; then
@@ -64,26 +59,23 @@ build_index() {
         return 1
     fi
 
-    if ! "$BCR_BIN" "$base.fasta" "$base" > /dev/null 2>&1; then
-        echo "Errore durante BCR_LCP_GSA per $eds" >&2
-        cleanup_cyc_files
+    if ! "$GSUF_BIN" "$base.fasta" --da --bwt --output "$base" > /dev/null 2>&1; then
+        echo "Errore durante gsufsort per $eds" >&2
         cleanup_partial_index "$base"
         return 1
     fi
 
-    cleanup_cyc_files
-
-    if [[ ! -f "$base.ebwt" || ! -f "$base.EOFpos" ]]; then
-        echo "Errore: indice BCR incompleto per $eds" >&2
+    if [[ ! -f "$base.bwt" || ! -f "$base.4.da" ]]; then
+        echo "Errore: output gsufsort incompleto per $eds" >&2
         cleanup_partial_index "$base"
         return 1
     fi
 
     rm -f "$base.fasta" "$base.len" "$base.info"
 
-    "$EOF_TOOL" "$base" > /dev/null 2>&1
+    "$DA_TOOL" "$base" > /dev/null 2>&1
 
-    rm -f "$base.EOFpos" "$base.empty.info"
+    rm -f "$base.bwt" "$base.4.da" "$base.empty.info"
 
     if [[ ! -f "${base}_info.aux" ]]; then
         echo "Errore: file ${base}_info.aux non creato" >&2
@@ -101,8 +93,8 @@ directional_similarity() {
 
 check_executable "$SEARCH_BIN"
 check_executable "$EDS2FASTA"
-check_executable "$EOF_TOOL"
-check_executable "$BCR_BIN"
+check_executable "$DA_TOOL"
+check_executable "$GSUF_BIN"
 
 if [[ $# -gt 0 ]]; then
     files=("$@")
@@ -124,8 +116,9 @@ for f in "${files[@]}"; do
 done
 
 timestamp="$(date +%Y%m%d_%H%M%S)"
-out_csv="$OUT_DIR/similarity_matrix_$timestamp.csv"
-out_long="$OUT_DIR/similarity_pairs_$timestamp.tsv"
+output_prefix="${OUTPUT_PREFIX:-similarity}"
+out_csv="$OUT_DIR/${output_prefix}_matrix_$timestamp.csv"
+out_long="$OUT_DIR/${output_prefix}_pairs_$timestamp.tsv"
 
 echo "Matrice di similarita ottimizzata"
 echo "File EDS: ${#files[@]}"
@@ -190,8 +183,6 @@ for ((i = 0; i < n; i++)); do
     done
     printf "\n" >> "$out_csv"
 done
-
-cleanup_cyc_files
 
 echo ""
 echo "Finito."
