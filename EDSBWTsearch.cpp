@@ -686,6 +686,18 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 
 	//Initialization
 	uchar symbol = kmer[lenKmer-1];
+	bool symbolInAlphabet = false;
+	for (dataTypedimAlpha mm = 0; mm < sizeAlpha; mm++) {
+		if (alphaInverse[mm] == symbol) {
+			symbolInAlphabet = true;
+			break;
+		}
+	}
+	if (!symbolInAlphabet) {
+		vectRangeOtherPile.clear();
+		vectRangeDollarPile.clear();
+		return 0;
+	}
 	vectRangeOtherPile.resize(1);
 	vectRangeOtherPile[0].startPosN = 1;  //The first occurrence of symbol in F is in the first position in the pile Symbol
 		//The last occurrence of the symbol prevSymbol in F is in the last position in the pile prevSymbol
@@ -731,6 +743,18 @@ int EDSBWT::backwardSearch(string fileInput, string fileOutDecode, dataTypeNSeq 
 		
 		//Preceding symbol in the pattern
 		symbol= kmer[posSymb-1];
+		symbolInAlphabet = false;
+		for (dataTypedimAlpha mm = 0; mm < sizeAlpha; mm++) {
+			if (alphaInverse[mm] == symbol) {
+				symbolInAlphabet = true;
+				break;
+			}
+		}
+		if (!symbolInAlphabet) {
+			vectRangeOtherPile.clear();
+			vectRangeDollarPile.clear();
+			return lenKmer-posSymb;
+		}
 
 		#if DEBUG == 1
 		std::cerr << "\n Iteration: posSymb in Pattern = "  << (int) posSymb << " symbol "<< symbol  << "\t";
